@@ -1,4 +1,4 @@
-extern crate libc;
+ extern crate libc;
 extern crate jack;
 use jack::{JackClient,JackPort};
 
@@ -72,11 +72,17 @@ fn port_connect_test() {
     assert!(in_port.connected() == 1);
     assert!(out_port.connected() == 1);
 
+    let conns = in_port.get_connections();
+    assert!(conns[0].as_slice() == "port_connect_test:output_test");
+
     assert!(client.disconnect("port_connect_test:output_test",
                               "port_connect_test:input_test"));
 
     assert!(in_port.connected() == 0);
     assert!(out_port.connected() == 0);
+
+    let noconns = in_port.get_connections();
+    assert!(noconns.len() == 0);
 
     assert!(client.close());
 }

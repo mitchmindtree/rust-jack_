@@ -2,6 +2,7 @@
 //#[crate_type = "lib"]
 
 extern crate libc;
+use std::vec::Vec;
 //use libc::size_t;
 
 pub use types:: {
@@ -83,7 +84,8 @@ extern {
     fn jack_set_process_callback(client: *mut jack_client_t, callback: JackProcessCallback<libc::c_void>, arg: *const libc::c_void) -> libc::c_int;
     fn jack_connect(client: *mut jack_client_t, source_port: *const libc::c_char, destination_port: *const libc::c_char) -> libc::c_int;
     fn jack_disconnect(client: *mut jack_client_t, source_port: *const libc::c_char, destination_port: *const libc::c_char) -> libc::c_int;
-
+    fn jack_is_realtime(client: *mut jack_client_t) -> libc::c_int;
+    fn jack_free(ptr: *mut libc::c_void) -> libc::c_void;
 
     // ports
     fn jack_port_register(client: *mut jack_client_t,
@@ -100,6 +102,7 @@ extern {
     fn jack_port_is_mine(client: *mut jack_client_t, port: *mut jack_port_t) -> libc::c_int;
     fn jack_port_connected(port: *mut jack_port_t) -> libc::c_int;
     fn jack_port_connected_to(port: *mut jack_port_t, port_name: *const libc::c_char) -> libc::c_int;
+    fn jack_port_get_connections(port: *mut jack_port_t) -> *mut*mut libc::c_char;
 
     // transport
     fn jack_transport_query(client: *mut jack_client_t, pos: *mut JackPositionT) -> JackTransportState;
@@ -240,6 +243,12 @@ impl JackClient {
         }
     }
 
+    pub fn is_realtime(&self) -> bool {
+        unsafe {
+            jack_is_realtime(self.client) == 1
+        }
+    }
+
 }
 
 impl JackPort {
@@ -298,5 +307,21 @@ impl JackPort {
         unsafe {
             jack_port_get_buffer(self.port,nframes) as *mut f32
         }
+    }
+
+    pub fn get_connections(&self) -> Vec<String> {
+        let mut vec = Vec::new();
+        unsafe {
+            let conns = jack_port_get_connections(self.port);
+            if conns.is_not_null() {
+                let mut idx = 0;
+                while (*(conns.offset(idx))).is_not_null() {
+                    vec.push(std::string::raw::from_buf(*(conns.offset(idx)) as *const u8));
+                    idx += 1;
+                }
+                jack_free(conns as *mut libc::c_void);
+            }
+        }
+        vec
     }
 }
