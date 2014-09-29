@@ -62,7 +62,7 @@ fn process(nframes: JackNframesT, data:* mut CallbackData) -> int {
         if (*data).transport_aware {
             let (state,pos) = cbd.client.query_transport();
             match state {
-                jack::JackTransportRolling => {}
+                jack::JackTransportRolling => {} // fall though and process_audio below
                 _ => {
                     process_silence(nframes,cbd);
                     return 0;

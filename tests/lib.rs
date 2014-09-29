@@ -1,5 +1,6 @@
+extern crate libc;
 extern crate jack;
-use jack::JackClient;
+use jack::{JackClient,JackPort};
 
 #[test]
 fn new_client_and_close() {
@@ -28,4 +29,61 @@ fn activate() {
     assert!(client.activate());
     assert!(client.deactivate());
     assert!(client.close());
+}
+
+#[test]
+fn port_test() {
+    let client = JackClient::open("port_test",jack::JackNullOption);
+    let port = client.register_port("test_port",
+                                    jack::JACK_DEFAULT_AUDIO_TYPE,
+                                    jack::JackPortIsOutput | jack::JackPortIsTerminal,
+                                    0);
+    assert!(port.name().as_slice() == "port_test:test_port");
+    assert!(port.short_name().as_slice() == "test_port");
+    assert!(port.flags() == jack::JackPortIsTerminal | jack::JackPortIsOutput);
+    assert!(port.get_type().as_slice() == jack::JACK_DEFAULT_AUDIO_TYPE);
+    assert!(client.port_is_mine(port));
+    assert!(port.connected() == 0);
+    client.unregister_port(&port);
+    assert!(client.close());
+}
+
+#[test]
+fn port_connect_test() {
+    let client = JackClient::open("port_connect_test",jack::JackNoStartServer);
+    let in_port = client.register_port("input_test",
+                                       jack::JACK_DEFAULT_AUDIO_TYPE,
+                                       jack::JackPortIsInput,
+                                       0);
+    let out_port = client.register_port("output_test",
+                                        jack::JACK_DEFAULT_AUDIO_TYPE,
+                                        jack::JackPortIsOutput,
+                                        0);
+
+    client.activate(); // need to be activated to connect ports
+
+    let res = client.connect("port_connect_test:output_test",
+                             "port_connect_test:input_test");
+    match res {
+        Ok(_) => {}
+        Err(s) => fail!(s)
+    }
+
+    assert!(in_port.connected() == 1);
+    assert!(out_port.connected() == 1);
+
+    assert!(client.disconnect("port_connect_test:output_test",
+                              "port_connect_test:input_test"));
+
+    assert!(in_port.connected() == 0);
+    assert!(out_port.connected() == 0);
+
+    assert!(client.close());
+}
+
+
+
+#[test]
+fn port_type_size() {
+    assert!(JackPort::type_size() == 32); // Might fail if this changes
 }

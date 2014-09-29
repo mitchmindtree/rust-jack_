@@ -8,8 +8,9 @@ pub use types:: {
     // main types
     JackNframesT,
     JackPositionT,
-    JackTimeT,
     JackPositionBitsT,
+    JackTimeT,
+    JackUuidT,
 
     JackOptions,
     // options
@@ -80,13 +81,25 @@ extern {
     fn jack_deactivate(client: *mut jack_client_t) -> libc::c_int;
     fn jack_get_sample_rate(client: *mut jack_client_t) -> libc::c_uint;
     fn jack_set_process_callback(client: *mut jack_client_t, callback: JackProcessCallback<libc::c_void>, arg: *const libc::c_void) -> libc::c_int;
+    fn jack_connect(client: *mut jack_client_t, source_port: *const libc::c_char, destination_port: *const libc::c_char) -> libc::c_int;
+    fn jack_disconnect(client: *mut jack_client_t, source_port: *const libc::c_char, destination_port: *const libc::c_char) -> libc::c_int;
+
 
     // ports
     fn jack_port_register(client: *mut jack_client_t,
                           port_name: *const libc::c_char, port_type: *const libc::c_char,
-                          flags: libc::c_ulong, buffer_size: libc::c_ulong) -> *mut jack_port_t;
-    fn jack_port_name(port: *mut jack_port_t) -> *const libc::c_char;
+                          flags: types::JackPortFlags, buffer_size: libc::c_ulong) -> *mut jack_port_t;
+    fn jack_port_unregister(client: *mut jack_client_t, port: *mut jack_port_t) -> libc::c_int;
     fn jack_port_get_buffer(port: *mut jack_port_t,  nframes: JackNframesT) -> *mut libc::c_void;
+    fn jack_port_name(port: *mut jack_port_t) -> *const libc::c_char;
+    fn jack_port_uuid(port: *mut jack_port_t) -> JackUuidT;
+    fn jack_port_short_name(port: *mut jack_port_t) -> *const libc::c_char;
+    fn jack_port_flags(port: *mut jack_port_t) -> JackPortFlags;
+    fn jack_port_type(port: *mut jack_port_t) -> *const libc::c_char;
+    fn jack_port_type_size() -> libc::c_int;
+    fn jack_port_is_mine(client: *mut jack_client_t, port: *mut jack_port_t) -> libc::c_int;
+    fn jack_port_connected(port: *mut jack_port_t) -> libc::c_int;
+    fn jack_port_connected_to(port: *mut jack_port_t, port_name: *const libc::c_char) -> libc::c_int;
 
     // transport
     fn jack_transport_query(client: *mut jack_client_t, pos: *mut JackPositionT) -> JackTransportState;
@@ -163,9 +176,21 @@ impl JackClient {
             let port = jack_port_register(self.client,
                                           port_name.to_c_str().as_ptr(),
                                           port_type.to_c_str().as_ptr(),
-                                          flags as u64,
+                                          flags,
                                           buffer_size);
             JackPort { port: port }
+        }
+    }
+
+    pub fn unregister_port(&self, port: &JackPort) -> bool {
+        unsafe {
+            jack_port_unregister(self.client,port.port) == 0
+        }
+    }
+
+    pub fn port_is_mine(&self, port: JackPort) -> bool {
+        unsafe {
+            !(jack_port_is_mine(self.client,port.port) == 0)
         }
     }
 
@@ -190,6 +215,31 @@ impl JackClient {
         }
     }
 
+    pub fn connect(&self, source_port: &str, destination_port: &str) -> Result<(), String> { // todo: convert to JackError or something like that
+        unsafe {
+            let res = jack_connect(self.client,
+                                   source_port.to_c_str().as_ptr(),
+                                   destination_port.to_c_str().as_ptr());
+            if res == 0 {
+                Ok(())
+            }
+            else if res == 17 { //EEXIST
+                Err("Ports already connected".to_string())
+            }
+            else {
+                Err("Unknown error connecting port".to_string())
+            }
+        }
+    }
+
+    pub fn disconnect(&self, source_port: &str, destination_port: &str) -> bool {
+        unsafe {
+            jack_disconnect(self.client,
+                            source_port.to_c_str().as_ptr(),
+                            destination_port.to_c_str().as_ptr()) == 0
+        }
+    }
+
 }
 
 impl JackPort {
@@ -197,6 +247,50 @@ impl JackPort {
         unsafe {
             let name = jack_port_name(self.port);
             std::string::raw::from_buf(name as *const u8)
+        }
+    }
+
+    pub fn uuid(&self) -> JackUuidT {
+        unsafe {
+            jack_port_uuid(self.port)
+        }
+    }
+
+    pub fn short_name(&self) -> String {
+        unsafe {
+            let name = jack_port_short_name(self.port);
+            std::string::raw::from_buf(name as *const u8)
+        }
+    }
+
+    pub fn flags(&self) -> JackPortFlags {
+        unsafe {
+            jack_port_flags(self.port)
+        }
+    }
+
+    pub fn get_type(&self) -> String { // ugly name, but have to avoid type keyword
+        unsafe {
+            let tname = jack_port_type(self.port);
+            std::string::raw::from_buf(tname as *const u8)
+        }
+    }
+
+    pub fn type_size() -> i32 {
+        unsafe {
+            jack_port_type_size() as i32
+        }
+    }
+
+    pub fn connected(&self) -> i32 {
+        unsafe {
+            jack_port_connected(self.port)
+        }
+    }
+
+    pub fn connected_to(&self, port: &str) -> bool {
+        unsafe {
+            !(jack_port_connected_to(self.port, port.to_c_str().as_ptr()) == 0)
         }
     }
 
