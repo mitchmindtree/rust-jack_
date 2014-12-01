@@ -2,6 +2,7 @@
 //#[crate_type = "lib"]
 
 extern crate libc;
+extern crate collections;
 use std::vec::Vec;
 //use libc::size_t;
 
@@ -48,11 +49,14 @@ pub use types:: {
     JackPortIsTerminal,
 
     JackTransportState,
+};
+
+pub use types::JackTransportState:: {
     //transport states
     JackTransportStopped,
 	  JackTransportRolling,
 	  JackTransportLooping,
-	  JackTransportStarting,
+    JackTransportStarting,
 };
 
 mod types;
@@ -146,7 +150,7 @@ impl JackClient {
     pub fn get_name(&self) -> String {
         unsafe {
             let name = jack_get_client_name(self.client);
-            std::string::raw::from_buf(name as *const u8)
+            collections::string::String::from_raw_buf(name as *const u8)
         }
     }
 
@@ -157,7 +161,7 @@ impl JackClient {
                 None
             }
             else {
-                Some(std::string::raw::from_buf(uuid as *const u8))
+                Some(collections::string::String::from_raw_buf(uuid as *const u8))
             }
         }
     }
@@ -255,7 +259,7 @@ impl JackPort {
     pub fn name(&self) -> String {
         unsafe {
             let name = jack_port_name(self.port);
-            std::string::raw::from_buf(name as *const u8)
+            collections::string::String::from_raw_buf(name as *const u8)
         }
     }
 
@@ -268,7 +272,7 @@ impl JackPort {
     pub fn short_name(&self) -> String {
         unsafe {
             let name = jack_port_short_name(self.port);
-            std::string::raw::from_buf(name as *const u8)
+            collections::string::String::from_raw_buf(name as *const u8)
         }
     }
 
@@ -281,7 +285,7 @@ impl JackPort {
     pub fn get_type(&self) -> String { // ugly name, but have to avoid type keyword
         unsafe {
             let tname = jack_port_type(self.port);
-            std::string::raw::from_buf(tname as *const u8)
+            collections::string::String::from_raw_buf(tname as *const u8)
         }
     }
 
@@ -309,6 +313,13 @@ impl JackPort {
         }
     }
 
+    pub fn get_vec_buffer(&self, nframes: JackNframesT) -> Vec<f32> {
+        let buf = self.get_buffer(nframes);
+        unsafe {
+            Vec::from_raw_buf(buf as *const f32,nframes as uint)
+        }
+    }
+
     pub fn get_connections(&self) -> Vec<String> {
         let mut vec = Vec::new();
         unsafe {
@@ -316,7 +327,7 @@ impl JackPort {
             if conns.is_not_null() {
                 let mut idx = 0;
                 while (*(conns.offset(idx))).is_not_null() {
-                    vec.push(std::string::raw::from_buf(*(conns.offset(idx)) as *const u8));
+                    vec.push(collections::string::String::from_raw_buf(*(conns.offset(idx)) as *const u8));
                     idx += 1;
                 }
                 jack_free(conns as *mut libc::c_void);

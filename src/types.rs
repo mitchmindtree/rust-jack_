@@ -2,47 +2,48 @@ pub type JackNframesT = u32;
 pub type JackTimeT = u64;
 pub type JackUuidT = u64;
 
+#[allow(non_uppercase_statics)]
 bitflags!(
     #[repr(C)]
     flags JackOptions: u32 {
-        static JackNullOption    = 0x000000,
-        static JackNoStartServer = 0x000001,
-        static JackUseExactName  = 0x000010,
-        static JackServerName    = 0x000100,
-        static JackLoadName      = 0x001000,
-        static JackLoadInit      = 0x010000,
-        static JackSessionID     = 0x100000
+        const JackNullOption    = 0x000000,
+        const JackNoStartServer = 0x000001,
+        const JackUseExactName  = 0x000010,
+        const JackServerName    = 0x000100,
+        const JackLoadName      = 0x001000,
+        const JackLoadInit      = 0x010000,
+        const JackSessionID     = 0x100000
     }
 )
 
 bitflags!(
     #[repr(C)]
     flags JackStatus: u32 {
-        static JackNullStatus = 0x00,
-        static JackFailure = 0x01,
-        static JackInvalidOption = 0x02,
-        static JackNameNotUnique = 0x04,
-        static JackServerStarted = 0x08,
-        static JackServerFailed = 0x10,
-        static JackServerError = 0x20,
-        static JackNoSuchClient = 0x40,
-        static JackLoadFailure = 0x80,
-        static JackInitFailure = 0x100,
-        static JackShmFailure = 0x200,
-        static JackVersionError = 0x400,
-        static JackBackendError = 0x800,
-        static JackClientZombie = 0x1000
+        const JackNullStatus = 0x00,
+        const JackFailure = 0x01,
+        const JackInvalidOption = 0x02,
+        const JackNameNotUnique = 0x04,
+        const JackServerStarted = 0x08,
+        const JackServerFailed = 0x10,
+        const JackServerError = 0x20,
+        const JackNoSuchClient = 0x40,
+        const JackLoadFailure = 0x80,
+        const JackInitFailure = 0x100,
+        const JackShmFailure = 0x200,
+        const JackVersionError = 0x400,
+        const JackBackendError = 0x800,
+        const JackClientZombie = 0x1000
     }
 )
 
 bitflags!(
     #[repr(C)]
     flags JackPortFlags: u32 {
-        static JackPortIsInput = 0x1,
-        static JackPortIsOutput = 0x2,
-        static JackPortIsPhysical = 0x4,
-        static JackPortCanMonitor = 0x8,
-        static JackPortIsTerminal = 0x10,
+        const JackPortIsInput = 0x1,
+        const JackPortIsOutput = 0x2,
+        const JackPortIsPhysical = 0x4,
+        const JackPortCanMonitor = 0x8,
+        const JackPortIsTerminal = 0x10,
     }
 )
 

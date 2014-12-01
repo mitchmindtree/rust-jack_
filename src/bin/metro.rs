@@ -1,3 +1,4 @@
+extern crate collections;
 extern crate getopts;
 extern crate jack;
 
@@ -6,6 +7,7 @@ use jack::{JackNframesT,JackClient};
 use getopts::{optopt,optflag,getopts,OptGroup};
 use std::os;
 use std::io::timer;
+use std::num::FloatMath;
 use std::time::duration::Duration;
 
 fn print_usage(program: &str, _opts: &[OptGroup]) {
@@ -75,7 +77,7 @@ fn process(nframes: JackNframesT, data:* mut CallbackData) -> int {
     0
 }
 
-fn get_numeric_arg<T: PartialOrd + std::from_str::FromStr>
+fn get_numeric_arg<T: PartialOrd + collections::str::FromStr>
     (matches: &getopts::Matches,
      opt: &str,
      default: Option<T>,
@@ -88,17 +90,17 @@ fn get_numeric_arg<T: PartialOrd + std::from_str::FromStr>
                 Some(v) => {
                     if (min.is_some() && v < min.unwrap()) ||
                        (max.is_some() && v > max.unwrap()) {
-                           fail!("Invalid argument for option {}: {}",opt,d)
+                           panic!("Invalid argument for option {}: {}",opt,d)
                        }
                     v
                 }
-                None => { fail!("Invalid argument for option {}: {}",opt,d) }
+                None => { panic!("Invalid argument for option {}: {}",opt,d) }
             }
         }
         None => {
             match default {
                 Some(d) => { d }
-                None => { fail!("Required argument not specified: {}",opt) }
+                None => { panic!("Required argument not specified: {}",opt) }
             }
         }
     }
@@ -107,7 +109,7 @@ fn get_numeric_arg<T: PartialOrd + std::from_str::FromStr>
 fn main() {
     let args: Vec<String> = os::args();
     let program = args[0].clone();
-    let opts = [
+    let opts = &[
         optopt("a", "attack", "Attack (in percent of duration)", ""),
         optopt("A", "amplitude", "Amplitude of beep", ""),
         optopt("b", "bpm", "Bpm of beep", ""),
@@ -120,7 +122,7 @@ fn main() {
 
     let matches = match getopts(args.tail(), opts) {
         Ok(m) => { m }
-        Err(f) => { fail!(f.to_string()) }
+        Err(f) => { panic!(f.to_string()) }
     };
 
     if matches.opt_present("h") {
