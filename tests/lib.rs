@@ -66,7 +66,7 @@ fn port_connect_test() {
                              "port_connect_test:input_test");
     match res {
         Ok(_) => {}
-        Err(s) => fail!(s)
+        Err(s) => panic!(s)
     }
 
     assert!(in_port.connected() == 1);
@@ -92,4 +92,23 @@ fn port_connect_test() {
 #[test]
 fn port_type_size() {
     assert!(JackPort::type_size() == 32); // Might fail if this changes
+}
+
+#[test]
+fn port_alias() {
+    let client = JackClient::open("port_alias_test",jack::JackNoStartServer);
+    let in_port = client.register_port("alias_test",
+                                       jack::JACK_DEFAULT_AUDIO_TYPE,
+                                       jack::JackPortIsInput,
+                                       0);
+    assert!(in_port.set_alias("alias1"));
+    let aliases = in_port.get_aliases();
+    assert!(aliases.len() == 1);
+    assert!(aliases[0].as_slice() == "alias1");
+    assert!(in_port.set_alias("alias2"));
+    let aliases2 = in_port.get_aliases();
+    assert!(aliases2.len() == 2);
+    assert!(aliases2[0].as_slice() == "alias1");
+    assert!(aliases2[1].as_slice() == "alias2");
+    assert!(client.close());
 }

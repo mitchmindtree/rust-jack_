@@ -32,13 +32,13 @@ struct CallbackData {
 }
 
 unsafe fn process_silence(nframes: JackNframesT, data:&mut CallbackData) {
-    let buf = (*data).port.get_buffer(nframes);
+    let buf:* mut f32 = (*data).port.get_buffer(nframes);
     std::ptr::set_memory(buf,0,nframes as uint);
 }
 
 unsafe fn process_audio(nframes: JackNframesT, data:&mut CallbackData) {
     let cbd = &mut *data;
-    let buf = cbd.port.get_buffer(nframes);
+    let buf:* mut f32 = cbd.port.get_buffer(nframes);
     let wave_len = cbd.wavetable.len() as JackNframesT;
     let mut frames_left = nframes;
 
@@ -106,6 +106,7 @@ fn get_numeric_arg<T: PartialOrd + collections::str::FromStr>
     }
 }
 
+#[cfg(not(test))]
 fn main() {
     let args: Vec<String> = os::args();
     let program = args[0].clone();
@@ -195,5 +196,7 @@ fn main() {
         println!("can't activate")
     }
 
-    timer::sleep(Duration::minutes(1));
+    loop {
+        timer::sleep(Duration::minutes(1));
+    }
 }

@@ -1,0 +1,188 @@
+* List of functions to implement
+** jack.h [41/75] [54%]
+*** DONE jack_client_open (const char *client_name, jack_options_t options, jack_status_t *status,...) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_client_close (jack_client_t *client) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_client_name_size (void) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_get_client_name (jack_client_t *client) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_get_uuid_for_client_name (jack_client_t *client, const char *name) JACK_WEAK_EXPORT
+*** DONE jack_get_client_name_by_uuid (jack_client_t *client, const char *uuid) JACK_WEAK_EXPORT
+*** DONE jack_activate (jack_client_t *client) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_deactivate (jack_client_t *client) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_client_thread_id (jack_client_t *) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_is_realtime (jack_client_t *client) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_cycle_wait (jack_client_t *client) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_cycle_signal (jack_client_t *client, int status) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_set_process_thread (jack_client_t *client, JackThreadCallback fun, void *arg) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_set_thread_init_callback (jack_client_t *client, JackThreadInitCallback thread_init_callback, void *arg) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_on_shutdown (jack_client_t *client, JackShutdownCallback function, void *arg) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_on_info_shutdown (jack_client_t *client, JackInfoShutdownCallback function, void *arg) JACK_WEAK_EXPORT
+*** DONE jack_set_process_callback (jack_client_t *client, JackProcessCallback process_callback, void *arg) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_set_freewheel_callback (jack_client_t *client, JackFreewheelCallback freewheel_callback, void *arg) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_set_buffer_size_callback (jack_client_t *client, JackBufferSizeCallback bufsize_callback, void *arg) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_set_sample_rate_callback (jack_client_t *client, JackSampleRateCallback srate_callback, void *arg) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_set_client_registration_callback (jack_client_t *, JackClientRegistrationCallback registration_callback, void *arg) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_set_port_registration_callback (jack_client_t *, JackPortRegistrationCallback registration_callback, void *arg) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_set_port_rename_callback (jack_client_t *, JackPortRenameCallback rename_callback, void *arg) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_set_port_connect_callback (jack_client_t *, JackPortConnectCallback connect_callback, void *arg) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_set_graph_order_callback (jack_client_t *, JackGraphOrderCallback graph_callback, void *) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_set_xrun_callback (jack_client_t *, JackXRunCallback xrun_callback, void *arg) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_set_latency_callback (jack_client_t *, JackLatencyCallback latency_callback, void *) JACK_WEAK_EXPORT
+*** TODO jack_set_freewheel (jack_client_t *client, int onoff) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_set_buffer_size (jack_client_t *client, jack_nframes_t nframes) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_get_sample_rate (jack_client_t *) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_get_buffer_size (jack_client_t *) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_cpu_load (jack_client_t *client) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_port_register (jack_client_t *client, const char *port_name, const char *port_type, unsigned long flags, unsigned long buffer_size) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_port_unregister (jack_client_t *, jack_port_t *) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_port_get_buffer (jack_port_t *, jack_nframes_t) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_port_name (const jack_port_t *port) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_port_uuid (const jack_port_t *port) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_port_short_name (const jack_port_t *port) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_port_flags (const jack_port_t *port) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_port_type (const jack_port_t *port) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_port_is_mine (const jack_client_t *, const jack_port_t *port) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_port_connected (const jack_port_t *port) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_port_connected_to (const jack_port_t *port, const char *port_name) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_port_get_connections (const jack_port_t *port) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_port_get_all_connections (const jack_client_t *client, const jack_port_t *port) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_port_set_name (jack_port_t *port, const char *port_name) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_port_set_alias (jack_port_t *port, const char *alias) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_port_unset_alias (jack_port_t *port, const char *alias) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_port_get_aliases (const jack_port_t *port, char *const aliases) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_port_request_monitor (jack_port_t *port, int onoff) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_port_request_monitor_by_name (jack_client_t *client, const char *port_name, int onoff) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_port_ensure_monitor (jack_port_t *port, int onoff) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_port_monitoring_input (jack_port_t *port) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_connect (jack_client_t *, const char *source_port, const char *destination_port) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_disconnect (jack_client_t *, const char *source_port, const char *destination_port) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_port_disconnect (jack_client_t *, jack_port_t *) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_port_name_size (void) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_port_type_size (void) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_port_type_get_buffer_size (jack_client_t *client, const char *port_type) JACK_WEAK_EXPORT
+*** TODO jack_port_get_latency_range (jack_port_t *port, jack_latency_callback_mode_t mode, jack_latency_range_t *range) JACK_WEAK_EXPORT
+*** TODO jack_port_set_latency_range (jack_port_t *port, jack_latency_callback_mode_t mode, jack_latency_range_t *range) JACK_WEAK_EXPORT
+*** TODO jack_recompute_total_latencies (jack_client_t *) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_get_ports (jack_client_t *, const char *port_name_pattern, const char *type_name_pattern, unsigned long flags) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_port_by_name (jack_client_t *, const char *port_name) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_port_by_id (jack_client_t *client, jack_port_id_t port_id) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_frames_since_cycle_start (const jack_client_t *) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_frame_time (const jack_client_t *) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_last_frame_time (const jack_client_t *client) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_get_cycle_times (const jack_client_t *client, jack_nframes_t *current_frames, jack_time_t *current_usecs, jack_time_t *next_usecs, float *period_usecs) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_frames_to_time (const jack_client_t *client, jack_nframes_t) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_time_to_frames (const jack_client_t *client, jack_time_t) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_get_time () JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_set_error_function (void(*func)(const char *)) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_set_info_function (void(*func)(const char *)) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_free (void *ptr) JACK_OPTIONAL_WEAK_EXPORT
+** transport.h [1/12] [8%]
+*** TODO jack_release_timebase (jack_client_t *client) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_set_sync_callback (jack_client_t *client, JackSyncCallback sync_callback, void *arg) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_set_sync_timeout (jack_client_t *client, jack_time_t timeout) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_set_timebase_callback (jack_client_t *client, int conditional, JackTimebaseCallback timebase_callback, void *arg) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_transport_locate (jack_client_t *client, jack_nframes_t frame) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_transport_query (const jack_client_t *client, jack_position_t *pos) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_get_current_transport_frame (const jack_client_t *client) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_transport_reposition (jack_client_t *client, const jack_position_t *pos) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_transport_start (jack_client_t *client) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_transport_stop (jack_client_t *client) JACK_OPTIONAL_WEAK_EXPORT
+** midiport.h [6/7] [85%]
+*** DONE jack_midi_get_event_count (void *port_buffer) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_midi_event_get (jack_midi_event_t *event, void *port_buffer, uint32_t event_index) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_midi_clear_buffer (void *port_buffer) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_midi_max_event_size (void *port_buffer) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_midi_event_reserve (void *port_buffer, jack_nframes_t time, size_t data_size) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_midi_event_write (void *port_buffer, jack_nframes_t time, const jack_midi_data_t *data, size_t data_size) JACK_OPTIONAL_WEAK_EXPORT
+*** DONE jack_midi_get_lost_event_count (void *port_buffer) JACK_OPTIONAL_WEAK_EXPORT
+** intclient.h [0/4] [0%]
+   :PROPERTIES:
+   :ATTACH_DIR_INHERIT: t
+   :END:
+*** TODO jack_get_internal_client_name (jack_client_t *client, jack_intclient_t intclient)
+*** TODO jack_internal_client_handle (jack_client_t *client, const char *client_name, jack_status_t *status, jack_intclient_t handle)
+*** TODO jack_internal_client_load (jack_client_t *client, const char *client_name, jack_options_t options, jack_status_t *status, jack_intclient_t,...)
+*** TODO jack_internal_client_unload (jack_client_t *client, jack_intclient_t intclient)
+** statistics.h [0/3] [0%]
+*** TODO jack_get_max_delayed_usecs (jack_client_t *client)
+*** TODO jack_get_xrun_delayed_usecs (jack_client_t *client)
+*** TODO jack_reset_max_delayed_usecs (jack_client_t *client)
+** ringbuffer.h [0/13] [0%]
+*** TODO jack_ringbuffer_create (size_t sz)
+*** TODO jack_ringbuffer_free (jack_ringbuffer_t *rb)
+*** TODO jack_ringbuffer_get_read_vector (const jack_ringbuffer_t *rb, jack_ringbuffer_data_t *vec)
+*** TODO jack_ringbuffer_get_write_vector (const jack_ringbuffer_t *rb, jack_ringbuffer_data_t *vec)
+*** TODO jack_ringbuffer_read (jack_ringbuffer_t *rb, char *dest, size_t cnt)
+*** TODO jack_ringbuffer_peek (jack_ringbuffer_t *rb, char *dest, size_t cnt)
+*** TODO jack_ringbuffer_read_advance (jack_ringbuffer_t *rb, size_t cnt)
+*** TODO jack_ringbuffer_read_space (const jack_ringbuffer_t *rb)
+*** TODO jack_ringbuffer_mlock (jack_ringbuffer_t *rb)
+*** TODO jack_ringbuffer_reset (jack_ringbuffer_t *rb)
+*** TODO jack_ringbuffer_write (jack_ringbuffer_t *rb, const char *src, size_t cnt)
+*** TODO jack_ringbuffer_write_advance (jack_ringbuffer_t *rb, size_t cnt)
+*** TODO jack_ringbuffer_write_space (const jack_ringbuffer_t *rb)
+** thread.h [0/6] [0%]
+*** TODO jack_client_real_time_priority (jack_client_t *) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_client_max_real_time_priority (jack_client_t *) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_acquire_real_time_scheduling (jack_native_thread_t thread, int priority) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_client_create_thread (jack_client_t *client, jack_native_thread_t *thread, int priority, int realtime, void *(*start_routine)(void *), void *arg) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_drop_real_time_scheduling (jack_native_thread_t thread) JACK_OPTIONAL_WEAK_EXPORT
+*** TODO jack_set_thread_creator (jack_thread_creator_t creator) JACK_OPTIONAL_WEAK_EXPORT
+** session.h [0/8] [0%]
+*** TODO jack_set_session_callback (jack_client_t *client, JackSessionCallback session_callback, void *arg) JACK_WEAK_EXPORT
+*** TODO jack_session_reply (jack_client_t *client, jack_session_event_t *event) JACK_WEAK_EXPORT
+*** TODO jack_session_event_free (jack_session_event_t *event) JACK_WEAK_EXPORT
+*** TODO jack_client_get_uuid (jack_client_t *client) JACK_WEAK_EXPORT
+*** TODO jack_session_notify (jack_client_t *client, const char *target, jack_session_event_type_t type, const char *path) JACK_WEAK_EXPORT
+*** TODO jack_session_commands_free (jack_session_command_t *cmds) JACK_WEAK_EXPORT
+*** TODO jack_reserve_client_name (jack_client_t *client, const char *name, const char *uuid) JACK_WEAK_EXPORT
+*** TODO jack_client_has_session_callback (jack_client_t *client, const char *client_name) JACK_WEAK_EXPORT
+** control.h [0/39] [0%]
+*** TODO jackctl_setup_signals (unsigned int flags)
+*** TODO jackctl_wait_signals (sigset_t signals)
+*** TODO jackctl_server_create (bool(*on_device_acquire)(const char *device_name), void(*on_device_release)(const char *device_name))
+*** TODO jackctl_server_destroy (jackctl_server_t *server)
+*** TODO jackctl_server_start (jackctl_server_t *server, jackctl_driver_t *driver)
+*** TODO jackctl_server_stop (jackctl_server_t *server)
+*** TODO jackctl_server_get_drivers_list (jackctl_server_t *server)
+*** TODO jackctl_server_get_parameters (jackctl_server_t *server)
+*** TODO jackctl_server_get_internals_list (jackctl_server_t *server)
+*** TODO jackctl_server_load_internal (jackctl_server_t *server, jackctl_internal_t *internal)
+*** TODO jackctl_server_unload_internal (jackctl_server_t *server, jackctl_internal_t *internal)
+*** TODO jackctl_server_add_slave (jackctl_server_t *server, jackctl_driver_t *driver)
+*** TODO jackctl_server_remove_slave (jackctl_server_t *server, jackctl_driver_t *driver)
+*** TODO jackctl_server_switch_master (jackctl_server_t *server, jackctl_driver_t *driver)
+*** TODO jackctl_driver_get_name (jackctl_driver_t *driver)
+*** TODO jackctl_driver_get_parameters (jackctl_driver_t *driver)
+*** TODO jackctl_internal_get_name (jackctl_internal_t *internal)
+*** TODO jackctl_internal_get_parameters (jackctl_internal_t *internal)
+*** TODO jackctl_parameter_get_name (jackctl_parameter_t *parameter)
+*** TODO jackctl_parameter_get_short_description (jackctl_parameter_t *parameter)
+*** TODO jackctl_parameter_get_long_description (jackctl_parameter_t *parameter)
+*** TODO jackctl_parameter_get_type (jackctl_parameter_t *parameter)
+*** TODO jackctl_parameter_get_id (jackctl_parameter_t *parameter)
+*** TODO jackctl_parameter_is_set (jackctl_parameter_t *parameter)
+*** TODO jackctl_parameter_reset (jackctl_parameter_t *parameter)
+*** TODO jackctl_parameter_get_value (jackctl_parameter_t *parameter)
+*** TODO jackctl_parameter_set_value (jackctl_parameter_t *parameter, const union jackctl_parameter_value *value_ptr)
+*** TODO jackctl_parameter_get_default_value (jackctl_parameter_t *parameter)
+*** TODO jackctl_parameter_has_range_constraint (jackctl_parameter_t *parameter)
+*** TODO jackctl_parameter_has_enum_constraint (jackctl_parameter_t *parameter)
+*** TODO jackctl_parameter_get_enum_constraints_count (jackctl_parameter_t *parameter)
+*** TODO jackctl_parameter_get_enum_constraint_value (jackctl_parameter_t *parameter, uint32_t index)
+*** TODO jackctl_parameter_get_enum_constraint_description (jackctl_parameter_t *parameter, uint32_t index)
+*** TODO jackctl_parameter_get_range_constraint (jackctl_parameter_t *parameter, union jackctl_parameter_value *min_ptr, union jackctl_parameter_value *max_ptr)
+*** TODO jackctl_parameter_constraint_is_strict (jackctl_parameter_t *parameter)
+*** TODO jackctl_parameter_constraint_is_fake_value (jackctl_parameter_t *parameter)
+*** TODO jack_error (const char *format,...)
+*** TODO jack_info (const char *format,...)
+*** TODO jack_log (const char *format,...)
+** property.h [0/9] [0%]
+*** TODO jack_set_property (jack_client_t *, jack_uuid_t subject, const char *key, const char *value, const char *type)
+*** TODO jack_get_property (jack_uuid_t subject, const char *key, char **value, char **type)
+*** TODO jack_free_description (jack_description_t *desc, int free_description_itself)
+*** TODO jack_get_properties (jack_uuid_t subject, jack_description_t *desc)
+*** TODO jack_get_all_properties (jack_description_t **descs)
+*** TODO jack_remove_property (jack_client_t *client, jack_uuid_t subject, const char *key)
+*** TODO jack_remove_properties (jack_client_t *client, jack_uuid_t subject)
+*** TODO jack_remove_all_properties (jack_client_t *client)
+*** TODO jack_set_property_change_callback (jack_client_t *client, JackPropertyChangeCallback callback, void *arg)

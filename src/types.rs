@@ -1,6 +1,11 @@
+
+use libc::size_t;
+use std::ptr::RawPtr;
+
 pub type JackNframesT = u32;
 pub type JackTimeT = u64;
 pub type JackUuidT = u64;
+pub type JackNativeThreadT = ::libc::pthread_t;
 
 #[allow(non_uppercase_statics)]
 bitflags!(
@@ -82,4 +87,26 @@ pub struct JackPositionT {
     pub video_offset: JackNframesT,
     pub padding: [i32, ..7u],
     unique_2: JackUniqueT,
+}
+
+// midi types
+
+pub type JackMidiDataT = ::libc::c_uchar;
+
+#[repr(C)]
+pub struct JackMidiEvent {
+    pub time: JackNframesT,
+    pub size: size_t,
+    buffer: *mut JackMidiDataT,
+}
+
+impl JackMidiEvent {
+    pub fn read_data(&self, index: u32) -> JackMidiDataT {
+        if index as size_t >= self.size {
+            panic!("Out of bounds trying to read midi event");
+        }
+        unsafe {
+            *(RawPtr::offset(self.buffer,index as int))
+        }
+    }
 }
