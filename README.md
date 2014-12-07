@@ -1,4 +1,4 @@
-rust-jack
+rust-jack [![Build Status](https://travis-ci.org/nicklan/rust-jack.svg?branch=master)](https://travis-ci.org/nicklan/rust-jack)
 =========
 
 This is a wrapper in rust around the c api for
