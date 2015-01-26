@@ -1,7 +1,6 @@
 #![allow(non_upper_case_globals)]
+#![allow(unstable)]
 #[macro_use] extern crate rustc_bitflags;
-
-#[comment = "jack bindings"]
 
 //#[crate_type = "lib"]
 
@@ -361,6 +360,8 @@ pub struct JackPort {
     port: *mut jack_port_t,
 }
 
+impl Copy for JackPort {}
+
 impl JackPort {
     pub fn name_size() -> i32 {
         unsafe { jack_port_name_size() }
@@ -542,6 +543,8 @@ pub struct MidiBuffer {
     buffer: *mut libc::c_void,
 }
 
+impl Copy for MidiBuffer {}
+
 impl MidiBuffer {
     /// Reserve event on this buffer at time with size data_size
     pub fn reserve_event(&self, time: JackNframesT, data_size: size_t) -> ReservedMidiEvent {
@@ -588,6 +591,8 @@ pub struct ReservedMidiEvent {
     buffer: *mut JackMidiDataT,
     len: size_t,
 }
+
+impl Copy for ReservedMidiEvent {}
 
 impl ReservedMidiEvent {
     pub fn write_data(&self, index: u32, data: JackMidiDataT) {

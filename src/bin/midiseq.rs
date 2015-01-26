@@ -1,3 +1,5 @@
+#![allow(unstable)]
+
 extern crate collections;
 extern crate getopts;
 extern crate jack;

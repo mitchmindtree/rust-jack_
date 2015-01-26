@@ -1,4 +1,6 @@
- extern crate libc;
+#![allow(unstable)]
+
+extern crate libc;
 extern crate jack;
 use jack::{JackClient,JackPort};
 

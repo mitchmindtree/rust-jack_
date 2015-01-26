@@ -60,6 +60,8 @@ pub enum JackTransportState {
 	  JackTransportStarting = 3,
 }
 
+impl Copy for JackTransportState {}
+
 pub type JackUniqueT = u64;
 pub type JackPositionBitsT = ::libc::c_uint;
 
@@ -87,6 +89,8 @@ pub struct JackPositionT {
     unique_2: JackUniqueT,
 }
 
+impl Copy for JackPositionT {}
+
 // midi types
 
 pub type JackMidiDataT = ::libc::c_uchar;
@@ -97,6 +101,8 @@ pub struct JackMidiEvent {
     pub size: size_t,
     buffer: *mut JackMidiDataT,
 }
+
+impl Copy for JackMidiEvent {}
 
 impl JackMidiEvent {
     pub fn read_data(&self, index: u32) -> JackMidiDataT {
