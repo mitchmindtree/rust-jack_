@@ -409,7 +409,7 @@ impl JackPort {
         }
     }
 
-    pub fn get_aliases(&self) -> Vec<String> {
+    pub fn get_aliases(&self) -> Vec<&str> {
         unsafe {
             let ps = jack_port_name_size() as usize;
             let mut al1 = Vec::with_capacity(ps);
@@ -421,14 +421,15 @@ impl JackPort {
             let acnt = jack_port_get_aliases(self.port as *const jack_port_t,jack_as.as_slice().as_ptr());
             if acnt > 0 {
                 let s = jack_as[0] as *const i8;
-                let slice = std::ffi::c_str_to_bytes(&s);
-                ret.push(String::from_str(str::from_utf8(slice).unwrap()));
-                //jack_free(jack_as[0]); // TODO: THIS
+                let ls = std::mem::copy_lifetime(self,&s);
+                let slice = std::ffi::c_str_to_bytes(ls);
+                ret.push(str::from_utf8(slice).unwrap());
             }
             if acnt > 1 {
                 let s = jack_as[1] as *const i8;
-                let slice = std::ffi::c_str_to_bytes(&s);
-                ret.push(String::from_str(str::from_utf8(slice).unwrap()));
+                let ls = std::mem::copy_lifetime(self,&s);
+                let slice = std::ffi::c_str_to_bytes(ls);
+                ret.push(str::from_utf8(slice).unwrap());
             }
             ret
         }
