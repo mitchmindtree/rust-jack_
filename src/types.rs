@@ -1,6 +1,4 @@
-
 use libc::size_t;
-use std::ptr::RawPtr;
 
 pub type JackNframesT = u32;
 pub type JackTimeT = u64;
@@ -19,7 +17,7 @@ bitflags!(
         const JackLoadInit      = 0x010000,
         const JackSessionID     = 0x100000
     }
-)
+);
 
 bitflags!(
     #[repr(C)]
@@ -39,7 +37,7 @@ bitflags!(
         const JackBackendError = 0x800,
         const JackClientZombie = 0x1000
     }
-)
+);
 
 bitflags!(
     #[repr(C)]
@@ -50,7 +48,7 @@ bitflags!(
         const JackPortCanMonitor = 0x8,
         const JackPortIsTerminal = 0x10,
     }
-)
+);
 
 #[repr(C)]
 pub enum JackTransportState {
@@ -85,7 +83,7 @@ pub struct JackPositionT {
     pub bbt_offset: JackNframesT,
     pub audio_frames_per_video_frame: ::libc::c_float,
     pub video_offset: JackNframesT,
-    pub padding: [i32, ..7u],
+    pub padding: [i32;7us],
     unique_2: JackUniqueT,
 }
 
@@ -106,7 +104,7 @@ impl JackMidiEvent {
             panic!("Out of bounds trying to read midi event");
         }
         unsafe {
-            *(RawPtr::offset(self.buffer,index as int))
+            *(self.buffer.offset(index as isize))
         }
     }
 }

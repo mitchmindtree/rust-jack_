@@ -7,19 +7,20 @@ use jack::{JackNframesT,JackClient};
 use getopts::{optopt,optflag,getopts,OptGroup};
 use std::os;
 use std::io::timer;
-use std::num::FloatMath;
+use std::num::Float;
+use std::str::FromStr;
 use std::time::duration::Duration;
 
 fn print_usage(program: &str, _opts: &[OptGroup]) {
     println!("Usage: {} [options]", program);
-    println!("\u0020-f --frequency\tFrequency of beep (in Hz)\n\
-              \u0020-A --amplitude\tMaximum application (between 0 and 1)\n\
-              \u0020-D --duration\tDuration of beep (in ms)\n\
-              \u0020-a --attack\tAttack (in percent of duration)\n\
-              \u0020-d --decay\tDecay (in percent of duration)\n\
-              \u0020-t --transport\tTransport aware\n\
-              \u0020-b --bpm\tBeats per minute\n\
-              \u0020-h --help\tUsage")
+    println!("\u{0020}-f --frequency\tFrequency of beep (in Hz)\n\
+              \u{0020}-A --amplitude\tMaximum application (between 0 and 1)\n\
+              \u{0020}-D --duration\tDuration of beep (in ms)\n\
+              \u{0020}-a --attack\tAttack (in percent of duration)\n\
+              \u{0020}-d --decay\tDecay (in percent of duration)\n\
+              \u{0020}-t --transport\tTransport aware\n\
+              \u{0020}-b --bpm\tBeats per minute\n\
+              \u{0020}-h --help\tUsage")
 }
 
 
@@ -33,7 +34,7 @@ struct CallbackData {
 
 unsafe fn process_silence(nframes: JackNframesT, data:&mut CallbackData) {
     let buf:* mut f32 = (*data).port.get_buffer(nframes);
-    std::ptr::set_memory(buf,0,nframes as uint);
+    std::ptr::set_memory(buf,0,nframes as usize);
 }
 
 unsafe fn process_audio(nframes: JackNframesT, data:&mut CallbackData) {
@@ -43,22 +44,22 @@ unsafe fn process_audio(nframes: JackNframesT, data:&mut CallbackData) {
     let mut frames_left = nframes;
 
     while wave_len - cbd.offset < frames_left {
-        let src = &(cbd.wavetable[cbd.offset as uint]) as *const f32;
-        std::ptr::copy_memory(buf.offset((nframes-frames_left) as int),src,(wave_len - cbd.offset) as uint);
+        let src = &(cbd.wavetable[cbd.offset as usize]) as *const f32;
+        std::ptr::copy_memory(buf.offset((nframes-frames_left) as isize),src,(wave_len - cbd.offset) as usize);
         frames_left -= wave_len - cbd.offset;
         cbd.offset = 0;
     }
 
     if frames_left > 0 {
-        let src = &(cbd.wavetable[cbd.offset as uint]) as *const f32;
-        std::ptr::copy_memory(buf.offset((nframes-frames_left) as int),src,frames_left as uint);
+        let src = &(cbd.wavetable[cbd.offset as usize]) as *const f32;
+        std::ptr::copy_memory(buf.offset((nframes-frames_left) as isize),src,frames_left as usize);
         cbd.offset += frames_left;
     }
 
     cbd.offset %= wave_len;
 }
 
-fn process(nframes: JackNframesT, data:* mut CallbackData) -> int {
+fn process(nframes: JackNframesT, data:* mut CallbackData) -> isize {
     unsafe {
         let cbd = &mut *data;
         if (*data).transport_aware {
@@ -77,7 +78,7 @@ fn process(nframes: JackNframesT, data:* mut CallbackData) -> int {
     0
 }
 
-fn get_numeric_arg<T: PartialOrd + collections::str::FromStr>
+fn get_numeric_arg<T: PartialOrd + std::str::FromStr>
     (matches: &getopts::Matches,
      opt: &str,
      default: Option<T>,
@@ -86,7 +87,8 @@ fn get_numeric_arg<T: PartialOrd + collections::str::FromStr>
 {
     match matches.opt_str(opt) {
         Some(d) => {
-            match from_str::<T>(d.as_slice()) {
+            let t: Option<T> = FromStr::from_str(d.as_slice());
+            match t {
                 Some(v) => {
                     if (min.is_some() && v < min.unwrap()) ||
                        (max.is_some() && v > max.unwrap()) {
@@ -139,7 +141,7 @@ fn main() {
     let decay_percent = get_numeric_arg(&matches,"d",Some(1_u32),Some(0_u32),Some(100_u32));
     let transport_aware = matches.opt_present("t");
 
-    println!("Playing at bpm {}",bpm)
+    println!("Playing at bpm {}",bpm);
 
     let client = JackClient::open("metro", jack::JackNoStartServer);
     let outport = client.register_port("metro_port", jack::JACK_DEFAULT_AUDIO_TYPE, jack::JackPortIsOutput, 0);
@@ -162,8 +164,8 @@ fn main() {
         return;
     }
 
-    let mut wave: Vec<f32> = Vec::with_capacity(wave_length as uint);
-    let mut amp: Vec<f32> = Vec::with_capacity(tone_length as uint);
+    let mut wave: Vec<f32> = Vec::with_capacity(wave_length as usize);
+    let mut amp: Vec<f32> = Vec::with_capacity(tone_length as usize);
 
     for i in range(0_u32, attack_length) {
         amp.push(max_amp * i as f32 / attack_length as f32)
@@ -178,7 +180,7 @@ fn main() {
 	  }
 
     for i in range(0_u32, tone_length) {
-        wave.push(amp[i as uint] * (scale * i as f32).sin());
+        wave.push(amp[i as usize] * (scale * i as f32).sin());
     }
     for _ in range(tone_length, wave_length) {
         wave.push(0_f32);

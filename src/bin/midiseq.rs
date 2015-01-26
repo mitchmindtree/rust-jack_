@@ -6,6 +6,7 @@ extern crate jack;
 use jack::{JackNframesT,JackClient};
 use std::os;
 use std::io::timer;
+use std::str::FromStr;
 use std::time::duration::Duration;
 
 fn print_usage() {
@@ -28,7 +29,7 @@ struct CallbackData {
     port: jack::JackPort,
 }
 
-fn process(nframes: JackNframesT, data:* mut CallbackData) -> int {
+fn process(nframes: JackNframesT, data:* mut CallbackData) -> isize {
     let cbd = unsafe { &mut *data };
     let midi_buf = cbd.port.get_midi_buffer(nframes);
     midi_buf.clear_buffer();
@@ -60,7 +61,7 @@ fn process(nframes: JackNframesT, data:* mut CallbackData) -> int {
 
 
 fn get_nframes_arg(arg: &collections::string::String) -> JackNframesT {
-    from_str::<JackNframesT>(arg.as_slice()).unwrap()
+    FromStr::from_str(arg.as_slice()).unwrap()
 }
 
 fn main() {
@@ -78,7 +79,7 @@ fn main() {
 
      for i in range(0,num_notes) {
          let start = get_nframes_arg(&args[3 + 3*i]);
-         let freq = from_str::<u8>(args[4 + 3*i].as_slice()).unwrap();
+         let freq:u8 = FromStr::from_str(args[4 + 3*i].as_slice()).unwrap();
          let length = get_nframes_arg(&args[5 + 3*i]);
          notes.push(Note {
              freq: freq,

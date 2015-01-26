@@ -1,4 +1,5 @@
 #![allow(non_upper_case_globals)]
+#[macro_use] extern crate rustc_bitflags;
 
 #[comment = "jack bindings"]
 
@@ -8,6 +9,9 @@ extern crate libc;
 extern crate collections;
 
 use libc::size_t;
+use std::ffi::CString;
+use std::string::String;
+use std::str;
 use std::vec::Vec;
 
 pub use types:: {
@@ -79,7 +83,7 @@ struct jack_port_t;
 pub static JACK_DEFAULT_AUDIO_TYPE:&'static str = "32 bit float mono audio";
 pub static JACK_DEFAULT_MIDI_TYPE:&'static str = "8 bit raw midi";
 
-pub type JackProcessCallback<T> = fn(JackNframesT, *mut T)->int;
+pub type JackProcessCallback<T> = fn(JackNframesT, *mut T)->isize;
 
 pub type JackDefaultAudioSampleT = f32;
 
@@ -155,17 +159,19 @@ pub struct JackClient {
     status: JackStatus,
 }
 
+impl Copy for JackClient {}
+
 impl JackClient {
-    pub fn name_size() -> int {
+    pub fn name_size() -> isize {
         unsafe {
-            jack_client_name_size() as int
+            jack_client_name_size() as isize
         }
     }
 
     pub fn open(name: &str, options: types::JackOptions) -> JackClient {
         unsafe {
             let status = JackNullStatus;
-            let innerclient = jack_client_open(name.to_c_str().as_ptr(),options,&status);
+            let innerclient = jack_client_open(CString::from_slice(name.as_bytes()).as_ptr(),options,&status);
             JackClient { client: innerclient, status: status }
         }
     }
@@ -180,33 +186,39 @@ impl JackClient {
         self.status
     }
 
-    pub fn get_name(&self) -> String {
+    pub fn get_name(&self) -> &str {
         unsafe {
             let name = jack_get_client_name(self.client);
-            collections::string::String::from_raw_buf(name as *const u8)
+            let lname = std::mem::copy_lifetime(self,&name);
+            let slice = std::ffi::c_str_to_bytes(lname);
+            str::from_utf8(slice).unwrap()
         }
     }
 
-    pub fn get_uuid_for_name(&self, name: &str) -> Option<String> {
+    pub fn get_uuid_for_name(&self, name: &str) -> Option<&str> {
         unsafe {
-            let uuid = jack_get_uuid_for_client_name(self.client,name.to_c_str().as_ptr());
+            let uuid = jack_get_uuid_for_client_name(self.client,CString::from_slice(name.as_bytes()).as_ptr());
             if uuid.is_null() {
                 None
             }
             else {
-                Some(collections::string::String::from_raw_buf(uuid as *const u8))
+                let luuid = std::mem::copy_lifetime(self,&uuid);
+                let slice = std::ffi::c_str_to_bytes(luuid);
+                Some(str::from_utf8(slice).unwrap())
             }
         }
     }
 
-    pub fn get_name_for_uuid(&self, uuid: &str) -> Option<String> {
+    pub fn get_name_for_uuid(&self, uuid: &str) -> Option<&str> {
         unsafe {
-            let name = jack_get_client_name_by_uuid(self.client,uuid.to_c_str().as_ptr());
+            let name = jack_get_client_name_by_uuid(self.client,CString::from_slice(uuid.as_bytes()).as_ptr());
             if name.is_null() {
                 None
             }
             else {
-                Some(collections::string::String::from_raw_buf(name as *const u8))
+                let lname = std::mem::copy_lifetime(self,&name);
+                let slice = std::ffi::c_str_to_bytes(lname);
+                Some(str::from_utf8(slice).unwrap())
             }
         }
     }
@@ -239,8 +251,8 @@ impl JackClient {
     pub fn register_port(&self, port_name: &str, port_type: &str, flags: JackPortFlags, buffer_size: u64) -> JackPort {
         unsafe {
             let port = jack_port_register(self.client,
-                                          port_name.to_c_str().as_ptr(),
-                                          port_type.to_c_str().as_ptr(),
+                                          CString::from_slice(port_name.as_bytes()).as_ptr(),
+                                          CString::from_slice(port_type.as_bytes()).as_ptr(),
                                           flags,
                                           buffer_size);
             JackPort { port: port }
@@ -252,10 +264,12 @@ impl JackClient {
         unsafe {
             let conns = jack_port_get_all_connections(self.client as *const jack_client_t,
                                                       port.port as *const jack_port_t);
-            if conns.is_not_null() {
+            if !conns.is_null() {
                 let mut idx = 0;
-                while (*(conns.offset(idx))).is_not_null() {
-                    vec.push(collections::string::String::from_raw_buf(*(conns.offset(idx)) as *const u8));
+                while !((*(conns.offset(idx))).is_null()) {
+                    let s = *(conns.offset(idx)) as *const i8;
+                    let slice = std::ffi::c_str_to_bytes(&s);
+                    vec.push(String::from_str(str::from_utf8(slice).unwrap()));
                     idx += 1;
                 }
                 jack_free(conns as *mut libc::c_void);
@@ -306,8 +320,8 @@ impl JackClient {
     pub fn connect(&self, source_port: &str, destination_port: &str) -> Result<(), String> { // todo: convert to JackError or something like that
         unsafe {
             let res = jack_connect(self.client,
-                                   source_port.to_c_str().as_ptr(),
-                                   destination_port.to_c_str().as_ptr());
+                                   CString::from_slice(source_port.as_bytes()).as_ptr(),
+                                   CString::from_slice(destination_port.as_bytes()).as_ptr());
             if res == 0 {
                 Ok(())
             }
@@ -323,8 +337,8 @@ impl JackClient {
     pub fn disconnect(&self, source_port: &str, destination_port: &str) -> bool {
         unsafe {
             jack_disconnect(self.client,
-                            source_port.to_c_str().as_ptr(),
-                            destination_port.to_c_str().as_ptr()) == 0
+                            CString::from_slice(source_port.as_bytes()).as_ptr(),
+                            CString::from_slice(destination_port.as_bytes()).as_ptr()) == 0
         }
     }
 
@@ -337,7 +351,7 @@ impl JackClient {
     pub fn request_monitor_by_name(&self, port_name: &str, on: bool) -> bool {
         let onoff = if on { 1 } else { 0 };
         unsafe {
-            jack_port_request_monitor_by_name(self.client,port_name.to_c_str().as_ptr(),onoff) == 0
+            jack_port_request_monitor_by_name(self.client,CString::from_slice(port_name.as_bytes()).as_ptr(),onoff) == 0
         }
     }
 
@@ -352,10 +366,12 @@ impl JackPort {
         unsafe { jack_port_name_size() }
     }
 
-    pub fn name(&self) -> String {
+    pub fn name(&self) -> &str {
         unsafe {
             let name = jack_port_name(self.port);
-            collections::string::String::from_raw_buf(name as *const u8)
+            let lname = std::mem::copy_lifetime(self,&name);
+            let slice = std::ffi::c_str_to_bytes(lname);
+            str::from_utf8(slice).unwrap()
         }
     }
 
@@ -365,46 +381,53 @@ impl JackPort {
         }
     }
 
-    pub fn short_name(&self) -> String {
+    pub fn short_name(&self) -> &str {
         unsafe {
             let name = jack_port_short_name(self.port);
-            collections::string::String::from_raw_buf(name as *const u8)
+            let lname = std::mem::copy_lifetime(self,&name);
+            let slice = std::ffi::c_str_to_bytes(lname);
+            str::from_utf8(slice).unwrap()
         }
     }
 
     pub fn set_name(&self, name: &str) -> bool {
         unsafe {
-            jack_port_set_name(self.port, name.to_c_str().as_ptr()) == 0
+            jack_port_set_name(self.port, CString::from_slice(name.as_bytes()).as_ptr()) == 0
         }
     }
 
     pub fn set_alias(&self, alias: &str) -> bool {
         unsafe {
-            jack_port_set_alias(self.port, alias.to_c_str().as_ptr()) == 0
+            jack_port_set_alias(self.port, CString::from_slice(alias.as_bytes()).as_ptr()) == 0
         }
     }
 
     pub fn unset_alias(&self, alias: &str) -> bool {
         unsafe {
-            jack_port_unset_alias(self.port, alias.to_c_str().as_ptr()) == 0
+            jack_port_unset_alias(self.port, CString::from_slice(alias.as_bytes()).as_ptr()) == 0
         }
     }
 
     pub fn get_aliases(&self) -> Vec<String> {
         unsafe {
-            let ps = jack_port_name_size() as uint;
+            let ps = jack_port_name_size() as usize;
             let mut al1 = Vec::with_capacity(ps);
             let mut al2 = Vec::with_capacity(ps);
-            let mut jack_as = [0 as *mut libc::c_char, ..2];
+            let mut jack_as = [0 as *mut libc::c_char;2];
             jack_as[0] = al1.as_mut_slice().as_mut_ptr();
             jack_as[1] = al2.as_mut_slice().as_mut_ptr();
             let mut ret = Vec::with_capacity(2);
             let acnt = jack_port_get_aliases(self.port as *const jack_port_t,jack_as.as_slice().as_ptr());
             if acnt > 0 {
-                ret.push(collections::string::String::from_raw_buf(jack_as[0] as *const u8));
+                let s = jack_as[0] as *const i8;
+                let slice = std::ffi::c_str_to_bytes(&s);
+                ret.push(String::from_str(str::from_utf8(slice).unwrap()));
+                //jack_free(jack_as[0]); // TODO: THIS
             }
             if acnt > 1 {
-                ret.push(collections::string::String::from_raw_buf(jack_as[1] as *const u8));
+                let s = jack_as[1] as *const i8;
+                let slice = std::ffi::c_str_to_bytes(&s);
+                ret.push(String::from_str(str::from_utf8(slice).unwrap()));
             }
             ret
         }
@@ -416,10 +439,12 @@ impl JackPort {
         }
     }
 
-    pub fn get_type(&self) -> String { // ugly name, but have to avoid type keyword
+    pub fn get_type(&self) -> &str { // ugly name, but have to avoid type keyword
         unsafe {
             let tname = jack_port_type(self.port);
-            collections::string::String::from_raw_buf(tname as *const u8)
+            let ltname = std::mem::copy_lifetime(self,&tname);
+            let slice = std::ffi::c_str_to_bytes(ltname);
+            str::from_utf8(slice).unwrap()
         }
     }
 
@@ -437,7 +462,7 @@ impl JackPort {
 
     pub fn connected_to(&self, port: &str) -> bool {
         unsafe {
-            !(jack_port_connected_to(self.port, port.to_c_str().as_ptr()) == 0)
+            !(jack_port_connected_to(self.port,CString::from_slice(port.as_bytes()).as_ptr()) == 0)
         }
     }
 
@@ -450,7 +475,7 @@ impl JackPort {
     pub fn get_vec_buffer<T>(&self, nframes: JackNframesT) -> Vec<T> {
         let buf:* mut T = self.get_buffer(nframes);
         unsafe {
-            Vec::from_raw_buf(buf as *const T,nframes as uint)
+            Vec::from_raw_buf(buf as *const T,nframes as usize)
         }
     }
 
@@ -464,10 +489,12 @@ impl JackPort {
         let mut vec = Vec::new();
         unsafe {
             let conns = jack_port_get_connections(self.port);
-            if conns.is_not_null() {
+            if !conns.is_null() {
                 let mut idx = 0;
-                while (*(conns.offset(idx))).is_not_null() {
-                    vec.push(collections::string::String::from_raw_buf(*(conns.offset(idx)) as *const u8));
+                while !((*(conns.offset(idx))).is_null()) {
+                    let s = *(conns.offset(idx)) as *const i8;
+                    let slice = std::ffi::c_str_to_bytes(&s);
+                    vec.push(String::from_str(str::from_utf8(slice).unwrap()));
                     idx += 1;
                 }
                 jack_free(conns as *mut libc::c_void);
@@ -481,10 +508,12 @@ impl JackPort {
         unsafe {
             let conns = jack_port_get_all_connections(client.client as *const jack_client_t,
                                                       self.port as *const jack_port_t);
-            if conns.is_not_null() {
+            if !conns.is_null() {
                 let mut idx = 0;
-                while (*(conns.offset(idx))).is_not_null() {
-                    vec.push(collections::string::String::from_raw_buf(*(conns.offset(idx)) as *const u8));
+                while !((*(conns.offset(idx))).is_null()) {
+                    let s = *(conns.offset(idx)) as *const i8;
+                    let slice = std::ffi::c_str_to_bytes(&s);
+                    vec.push(String::from_str(str::from_utf8(slice).unwrap()));
                     idx += 1;
                 }
                 jack_free(conns as *mut libc::c_void);
@@ -566,7 +595,7 @@ impl ReservedMidiEvent {
             panic!("Out of bounds trying to write to midi event");
         }
         unsafe {
-            let p = std::ptr::RawPtr::offset(self.buffer,index as int);
+            let p = self.buffer.offset(index as isize);
             *p = data;
         }
     }
