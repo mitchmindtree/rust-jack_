@@ -1,7 +1,6 @@
-rust-jack [![Build Status](https://travis-ci.org/nicklan/rust-jack.svg?branch=master)](https://travis-ci.org/nicklan/rust-jack)
-=========
+# rust-jack [![Build Status](https://travis-ci.org/nicklan/rust-jack.svg?branch=master)](https://travis-ci.org/nicklan/rust-jack)
 
-This is a wrapper in rust around the c api for
+This is a wrapper in Rust around the c api for
 [Jack](http://jackaudio.org/).  It includes some example clients in
 the bin directory.
 
@@ -18,8 +17,16 @@ The Jack api can be found
 At some point there will be a proper api doc for this rust library as
 well.
 
-Building
---------
+# Installation
+Use [Cargo](http://doc.crates.io/) and add the following to your Cargo.toml
+
+```
+[dependencies.jack]
+git = "https://github.com/nicklan/rust-jack.git"
+```
+
+
+#Building
 to build simply do
 
     cargo build
