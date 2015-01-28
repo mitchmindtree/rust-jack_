@@ -7,7 +7,7 @@ extern crate jack;
 
 use jack::{JackNframesT,JackClient};
 use std::os;
-use std::io::timer;
+use std::old_io::timer;
 use std::str::FromStr;
 use std::time::duration::Duration;
 
