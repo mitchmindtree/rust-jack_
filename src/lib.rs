@@ -159,6 +159,8 @@ pub struct JackClient {
 }
 
 impl Copy for JackClient {}
+unsafe impl Send for JackClient {}
+unsafe impl Sync for JackClient {}
 
 impl JackClient {
     pub fn name_size() -> isize {
@@ -361,6 +363,8 @@ pub struct JackPort {
 }
 
 impl Copy for JackPort {}
+unsafe impl Send for JackPort {}
+unsafe impl Sync for JackPort {}
 
 impl JackPort {
     pub fn name_size() -> i32 {

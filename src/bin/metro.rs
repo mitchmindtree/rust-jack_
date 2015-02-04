@@ -89,16 +89,16 @@ fn get_numeric_arg<T: PartialOrd + std::str::FromStr>
 {
     match matches.opt_str(opt) {
         Some(d) => {
-            let t: Option<T> = FromStr::from_str(d.as_slice());
-            match t {
-                Some(v) => {
-                    if (min.is_some() && v < min.unwrap()) ||
-                       (max.is_some() && v > max.unwrap()) {
+            match FromStr::from_str(d.as_slice()) {
+                Ok(v) => {
+                    let t:T = v;
+                    if (min.is_some() && t < min.unwrap()) ||
+                       (max.is_some() && t > max.unwrap()) {
                            panic!("Invalid argument for option {}: {}",opt,d)
                        }
-                    v
+                    t
                 }
-                None => { panic!("Invalid argument for option {}: {}",opt,d) }
+                Err(_) => { panic!("Invalid argument for option {}: {}",opt,d) }
             }
         }
         None => {
