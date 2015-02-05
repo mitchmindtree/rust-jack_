@@ -609,6 +609,15 @@ impl ReservedMidiEvent {
             *p = data;
         }
     }
+
+    pub fn write_vec(&self, vec: &Vec<JackMidiDataT>) {
+        if vec.len() > self.len as usize {
+            panic!("Too much data passed to write_vec");
+        }
+        unsafe {
+            std::ptr::copy_memory(self.buffer,vec.as_ptr(),self.len as usize);
+        }
+    }
 }
 
 
