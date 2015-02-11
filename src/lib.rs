@@ -1,5 +1,5 @@
 #![allow(non_upper_case_globals)]
-#![allow(unstable)]
+#![feature(collections,core,hash,libc,rustc_private,std_misc)]
 #[macro_use] extern crate rustc_bitflags;
 
 //#[crate_type = "lib"]
