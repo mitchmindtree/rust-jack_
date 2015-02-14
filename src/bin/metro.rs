@@ -1,4 +1,4 @@
-#![feature(collections,core,io,os,rustc_private,std_misc)]
+#![feature(collections,core,env,io,rustc_private,std_misc)]
 
 extern crate collections;
 extern crate getopts;
@@ -7,7 +7,7 @@ extern crate jack;
 
 use jack::{JackNframesT,JackClient};
 use getopts::{optopt,optflag,getopts,OptGroup};
-use std::os;
+use std::env::args;
 use std::old_io::timer;
 use std::num::Float;
 use std::str::FromStr;
@@ -112,8 +112,8 @@ fn get_numeric_arg<T: PartialOrd + std::str::FromStr>
 
 #[cfg(not(test))]
 fn main() {
-    let args: Vec<String> = os::args();
-    let program = args[0].clone();
+    let mut args = args();
+    let program = args.next().unwrap();
     let opts = &[
         optopt("a", "attack", "Attack (in percent of duration)", ""),
         optopt("A", "amplitude", "Amplitude of beep", ""),
@@ -125,7 +125,9 @@ fn main() {
         optflag("h", "help", "Print this help menu")
     ];
 
-    let matches = match getopts(args.tail(), opts) {
+    let mut argvec = Vec::with_capacity(args.size_hint().0);
+    for a in args { argvec.push(a); }
+    let matches = match getopts(argvec.as_slice(), opts) {
         Ok(m) => { m }
         Err(f) => { panic!(f.to_string()) }
     };

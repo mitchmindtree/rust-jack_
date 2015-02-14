@@ -1,4 +1,4 @@
-#![allow(unstable)]
+#![feature(core,libc)]
 
 extern crate libc;
 extern crate jack;

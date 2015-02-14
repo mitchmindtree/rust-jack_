@@ -1,4 +1,4 @@
-#![feature(collections,core,io,os,rustc_private,std_misc)]
+#![feature(collections,core,io,env,rustc_private,std_misc)]
 
 extern crate collections;
 extern crate getopts;
@@ -6,7 +6,7 @@ extern crate jack;
 
 
 use jack::{JackNframesT,JackClient};
-use std::os;
+use std::env::args;
 use std::old_io::timer;
 use std::str::FromStr;
 use std::time::duration::Duration;
@@ -67,7 +67,11 @@ fn get_nframes_arg(arg: &collections::string::String) -> JackNframesT {
 }
 
 fn main() {
-    let args: Vec<String> = os::args();
+    let mut argsi = args();
+    argsi.next(); // strip off program name
+    let mut args: Vec<String> = Vec::with_capacity(argsi.size_hint().0);
+    for a in argsi { args.push(a); }
+
     if args.len() < 6 || (args.len()-3)%3 != 0 {
         print_usage();
         return;
