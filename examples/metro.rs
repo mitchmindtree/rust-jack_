@@ -1,28 +1,17 @@
-#![feature(collections,core,env,io,rustc_private,std_misc)]
-
-extern crate collections;
 extern crate getopts;
 extern crate jack;
 
 
 use jack::{JackNframesT,JackClient};
-use getopts::{optopt,optflag,getopts,OptGroup};
-use std::env::args;
-use std::old_io::timer;
-use std::num::Float;
-use std::str::FromStr;
-use std::time::duration::Duration;
 
-fn print_usage(program: &str, _opts: &[OptGroup]) {
-    println!("Usage: {} [options]", program);
-    println!("\u{0020}-f --frequency\tFrequency of beep (in Hz)\n\
-              \u{0020}-A --amplitude\tMaximum application (between 0 and 1)\n\
-              \u{0020}-D --duration\tDuration of beep (in ms)\n\
-              \u{0020}-a --attack\tAttack (in percent of duration)\n\
-              \u{0020}-d --decay\tDecay (in percent of duration)\n\
-              \u{0020}-t --transport\tTransport aware\n\
-              \u{0020}-b --bpm\tBeats per minute\n\
-              \u{0020}-h --help\tUsage")
+use getopts::Options;
+
+use std::env;
+use std::str::FromStr;
+
+fn print_usage(program: String, opts: Options) {
+    let brief = format!("Usage: {} [options]", program);
+    println!("{}",opts.usage(&brief));
 }
 
 
@@ -36,7 +25,7 @@ struct CallbackData {
 
 unsafe fn process_silence(nframes: JackNframesT, data:&mut CallbackData) {
     let buf:* mut f32 = (*data).port.get_buffer(nframes);
-    std::ptr::set_memory(buf,0,nframes as usize);
+    std::ptr::write_bytes(buf,0,nframes as usize);
 }
 
 unsafe fn process_audio(nframes: JackNframesT, data:&mut CallbackData) {
@@ -47,14 +36,14 @@ unsafe fn process_audio(nframes: JackNframesT, data:&mut CallbackData) {
 
     while wave_len - cbd.offset < frames_left {
         let src = &(cbd.wavetable[cbd.offset as usize]) as *const f32;
-        std::ptr::copy_memory(buf.offset((nframes-frames_left) as isize),src,(wave_len - cbd.offset) as usize);
+        std::ptr::copy(src,buf.offset((nframes-frames_left) as isize),(wave_len - cbd.offset) as usize);
         frames_left -= wave_len - cbd.offset;
         cbd.offset = 0;
     }
 
     if frames_left > 0 {
         let src = &(cbd.wavetable[cbd.offset as usize]) as *const f32;
-        std::ptr::copy_memory(buf.offset((nframes-frames_left) as isize),src,frames_left as usize);
+        std::ptr::copy(src,buf.offset((nframes-frames_left) as isize),frames_left as usize);
         cbd.offset += frames_left;
     }
 
@@ -89,7 +78,7 @@ fn get_numeric_arg<T: PartialOrd + std::str::FromStr>
 {
     match matches.opt_str(opt) {
         Some(d) => {
-            match FromStr::from_str(d.as_slice()) {
+            match FromStr::from_str(&d[..]) {
                 Ok(v) => {
                     let t:T = v;
                     if (min.is_some() && t < min.unwrap()) ||
@@ -112,28 +101,25 @@ fn get_numeric_arg<T: PartialOrd + std::str::FromStr>
 
 #[cfg(not(test))]
 fn main() {
-    let mut args = args();
-    let program = args.next().unwrap();
-    let opts = &[
-        optopt("a", "attack", "Attack (in percent of duration)", ""),
-        optopt("A", "amplitude", "Amplitude of beep", ""),
-        optopt("b", "bpm", "Bpm of beep", ""),
-        optopt("d", "decay", "Decay (in percent of duration)", ""),
-        optopt("D", "duration", "Duration of beep", ""),
-        optopt("f", "frequency", "Frequency of beep", ""),
-        optflag("t", "transport", "Transport aware"),
-        optflag("h", "help", "Print this help menu")
-    ];
+    let args: Vec<String> = env::args().collect();
+    let program = args[0].clone();
+    let mut opts = Options::new();
+    opts.optopt("a", "attack", "Attack (in percent of duration)", "").
+        optopt("A", "amplitude", "Amplitude of beep", "").
+        reqopt("b", "bpm", "Bpm of beep", "").
+        optopt("d", "decay", "Decay (in percent of duration)", "").
+        optopt("D", "duration", "Duration of beep", "").
+        optopt("f", "frequency", "Frequency of beep", "").
+        optflag("t", "transport", "Transport aware").
+        optflag("h", "help", "Print this help menu");
 
-    let mut argvec = Vec::with_capacity(args.size_hint().0);
-    for a in args { argvec.push(a); }
-    let matches = match getopts(argvec.as_slice(), opts) {
+    let matches = match opts.parse(&args[1..]) {
         Ok(m) => { m }
         Err(f) => { panic!(f.to_string()) }
     };
 
     if matches.opt_present("h") {
-        print_usage(program.as_slice(), opts);
+        print_usage(program, opts);
         return;
     }
 
@@ -148,7 +134,7 @@ fn main() {
     println!("Playing at bpm {}",bpm);
 
     let client = JackClient::open("metro", jack::JackNoStartServer);
-    let outport = client.register_port("metro_port", jack::JACK_DEFAULT_AUDIO_TYPE, jack::JackPortIsOutput, 0);
+    let outport = client.register_port(&format!("{}-bpm",bpm)[..], jack::JACK_DEFAULT_AUDIO_TYPE, jack::JackPortIsOutput, 0);
 
     let sample_rate = client.sample_rate();
 
@@ -171,22 +157,22 @@ fn main() {
     let mut wave: Vec<f32> = Vec::with_capacity(wave_length as usize);
     let mut amp: Vec<f32> = Vec::with_capacity(tone_length as usize);
 
-    for i in range(0_u32, attack_length) {
+    for i in 0_u32..attack_length {
         amp.push(max_amp * i as f32 / attack_length as f32)
     }
 
-	  for _ in range(attack_length, tone_length - decay_length) {
+	  for _ in attack_length..(tone_length - decay_length) {
 		    amp.push(max_amp);
 	  }
 
-	  for i in range(tone_length - decay_length, tone_length) {
+	  for i in (tone_length - decay_length)..tone_length {
 		    amp.push(max_amp * (i as f32 - tone_length as f32) / decay_length as f32)
 	  }
 
-    for i in range(0_u32, tone_length) {
+    for i in 0_u32..tone_length {
         wave.push(amp[i as usize] * (scale * i as f32).sin());
     }
-    for _ in range(tone_length, wave_length) {
+    for _ in tone_length..wave_length {
         wave.push(0_f32);
     }
 
@@ -203,6 +189,6 @@ fn main() {
     }
 
     loop {
-        timer::sleep(Duration::minutes(1));
+        std::thread::sleep_ms(60000);
     }
 }

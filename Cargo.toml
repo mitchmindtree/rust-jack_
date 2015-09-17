@@ -11,3 +11,18 @@ license = "LGPL-2.1"
 
 [lib]
 name="jack"
+
+[dependencies]
+bitflags = "0.3.2"
+libc = "0.1"
+
+[dev-dependencies]
+getopts = "0.2"
+
+[[example]]
+name = "metro"
+path = "examples/metro.rs"
+
+[[example]]
+name = "midiseq"
+path = "examples/midiseq.rs"

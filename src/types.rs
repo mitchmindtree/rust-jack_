@@ -6,7 +6,7 @@ pub type JackUuidT = u64;
 pub type JackNativeThreadT = ::libc::pthread_t;
 
 #[allow(non_uppercase_statics)]
-bitflags!(
+bitflags! {
     #[repr(C)]
     flags JackOptions: u32 {
         const JackNullOption    = 0x000000,
@@ -17,7 +17,7 @@ bitflags!(
         const JackLoadInit      = 0x010000,
         const JackSessionID     = 0x100000
     }
-);
+}
 
 bitflags!(
     #[repr(C)]
@@ -51,6 +51,7 @@ bitflags!(
 );
 
 #[repr(C)]
+#[derive(Clone,Copy)]
 pub enum JackTransportState {
 	  /* the order matters for binary compatibility */
 	  JackTransportStopped = 0,	/**< Transport halted */
@@ -60,12 +61,11 @@ pub enum JackTransportState {
 	  JackTransportStarting = 3,
 }
 
-impl Copy for JackTransportState {}
-
 pub type JackUniqueT = u64;
 pub type JackPositionBitsT = ::libc::c_uint;
 
 #[repr(C,packed)]
+#[derive(Clone,Copy)]
 pub struct JackPositionT {
     unique_1: JackUniqueT,
     pub usecs: JackTimeT,
@@ -85,24 +85,22 @@ pub struct JackPositionT {
     pub bbt_offset: JackNframesT,
     pub audio_frames_per_video_frame: ::libc::c_float,
     pub video_offset: JackNframesT,
-    pub padding: [i32;7us],
+    pub padding: [i32;7],
     unique_2: JackUniqueT,
 }
-
-impl Copy for JackPositionT {}
 
 // midi types
 
 pub type JackMidiDataT = ::libc::c_uchar;
 
+
+#[derive(Clone,Copy)]
 #[repr(C)]
 pub struct JackMidiEvent {
     pub time: JackNframesT,
     pub size: size_t,
     buffer: *mut JackMidiDataT,
 }
-
-impl Copy for JackMidiEvent {}
 
 impl JackMidiEvent {
     pub fn read_data(&self, index: u32) -> JackMidiDataT {

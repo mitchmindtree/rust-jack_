@@ -1,5 +1,3 @@
-#![feature(core,libc)]
-
 extern crate libc;
 extern crate jack;
 use jack::{JackClient,JackPort};
@@ -22,7 +20,7 @@ fn get_client_name() {
     let client = JackClient::open(name,jack::JackNullOption);
     let get_name = client.get_name();
     client.close();
-    assert!(get_name.as_slice() == name);
+    assert!(get_name == name);
 }
 
 #[test]
@@ -40,10 +38,10 @@ fn port_test() {
                                     jack::JACK_DEFAULT_AUDIO_TYPE,
                                     jack::JackPortIsOutput | jack::JackPortIsTerminal,
                                     0);
-    assert!(port.name().as_slice() == "port_test:test_port");
-    assert!(port.short_name().as_slice() == "test_port");
+    assert!(port.name() == "port_test:test_port");
+    assert!(port.short_name() == "test_port");
     assert!(port.flags() == jack::JackPortIsTerminal | jack::JackPortIsOutput);
-    assert!(port.get_type().as_slice() == jack::JACK_DEFAULT_AUDIO_TYPE);
+    assert!(port.get_type() == jack::JACK_DEFAULT_AUDIO_TYPE);
     assert!(client.port_is_mine(port));
     assert!(port.connected() == 0);
     client.unregister_port(&port);
@@ -75,7 +73,7 @@ fn port_connect_test() {
     assert!(out_port.connected() == 1);
 
     let conns = in_port.get_connections();
-    assert!(conns[0].as_slice() == "port_connect_test:output_test");
+    assert!(conns[0] == "port_connect_test:output_test");
 
     assert!(client.disconnect("port_connect_test:output_test",
                               "port_connect_test:input_test"));
@@ -106,11 +104,11 @@ fn port_alias() {
     assert!(in_port.set_alias("alias1"));
     let aliases = in_port.get_aliases();
     assert!(aliases.len() == 1);
-    assert!(aliases[0].as_slice() == "alias1");
+    assert!(aliases[0] == "alias1");
     assert!(in_port.set_alias("alias2"));
     let aliases2 = in_port.get_aliases();
     assert!(aliases2.len() == 2);
-    assert!(aliases2[0].as_slice() == "alias1");
-    assert!(aliases2[1].as_slice() == "alias2");
+    assert!(aliases2[0] == "alias1");
+    assert!(aliases2[1] == "alias2");
     assert!(client.close());
 }
