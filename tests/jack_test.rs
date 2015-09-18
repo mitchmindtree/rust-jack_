@@ -1,20 +1,16 @@
-extern crate libc;
 extern crate jack;
 use jack::{JackClient,JackPort};
 
-#[test]
 fn new_client_and_close() {
     let client = JackClient::open("new_client",jack::JackNullOption);
     assert!(client.close());
 }
 
-#[test]
 fn client_name_size() {
     let size = JackClient::name_size();
     assert!(size == 33);
 }
 
-#[test]
 fn get_client_name() {
     let name = "check_me";
     let client = JackClient::open(name,jack::JackNullOption);
@@ -23,7 +19,6 @@ fn get_client_name() {
     assert!(get_name == name);
 }
 
-#[test]
 fn activate() {
     let client = JackClient::open("activate_client",jack::JackNullOption);
     assert!(client.activate());
@@ -31,7 +26,6 @@ fn activate() {
     assert!(client.close());
 }
 
-#[test]
 fn port_test() {
     let client = JackClient::open("port_test",jack::JackNullOption);
     let port = client.register_port("test_port",
@@ -48,7 +42,6 @@ fn port_test() {
     assert!(client.close());
 }
 
-#[test]
 fn port_connect_test() {
     let client = JackClient::open("port_connect_test",jack::JackNoStartServer);
     let in_port = client.register_port("input_test",
@@ -89,12 +82,10 @@ fn port_connect_test() {
 
 
 
-#[test]
 fn port_type_size() {
     assert!(JackPort::type_size() == 32); // Might fail if this changes
 }
 
-#[test]
 fn port_alias() {
     let client = JackClient::open("port_alias_test",jack::JackNoStartServer);
     let in_port = client.register_port("alias_test",
@@ -111,4 +102,16 @@ fn port_alias() {
     assert!(aliases2[0] == "alias1");
     assert!(aliases2[1] == "alias2");
     assert!(client.close());
+}
+
+// TODO: When test crate stabalizes, use run_test from there
+fn main() {
+    new_client_and_close();
+    client_name_size();
+    get_client_name();
+    activate();
+    port_test();
+    port_connect_test();
+    port_type_size();
+    port_alias();
 }
